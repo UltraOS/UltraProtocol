@@ -53,7 +53,7 @@ an option is loader specific and is defined by its configuration file format.
 Defines various kernel binary related options.
 
 - `binary` - (string) - shorthand alias for `binary/path`
-- `binary/path` - (string) - specifies path to the kernel in a loader-defined format, if applicable.
+- `binary/path` - (string) - specifies the path to the kernel in a loader-defined format, if applicable.
 - `binary/allocate-anywhere` (bool, optional, default=false) - allows the kernel physical memory mappings to be
 allocated anywhere in memory. Only valid for 64 bit higher-half kernels.
 
@@ -69,7 +69,7 @@ Defines various options related to the address passed in the arch-specific SP re
            
 - `stack` (string/unsigned) - shorthand alias for `stack/size`. Also allows a literal "auto".
 - `stack/size` (unsigned, optional, default=16K) - page aligned size of the stack to allocate.
-- `stack/allocate-at` (string/unsigned, default=<implementation-defined>) - address where to allocate the stack
+- `stack/allocate-at` (string/unsigned, default=\<implementation-defined\>) - address where to allocate the stack
 
 ### Video Mode & Framebuffer
               
@@ -87,7 +87,8 @@ if this is the case
 Defines a list of files for the loader to preload into ram before handover.
 
 - `module` - (string) - shorthand alias for `module/path`
-- `module/path` - (string) - specifies the path for the module to load
+- `module/name` - (string, optional, default=\<implementation-defined\>) - name of the module that the kernel receives
+- `module/path` - (string) - specifies the path for the module to load in a loader-defined format, if applicable.
 - `module/load-at` (unsigned/string, optional, unique, default="anywhere") - specifies the load address for the module
                   
 Each directive generates a separate `ultra_module_info_attribute`
@@ -207,7 +208,7 @@ struct platform_info_attribute {
 ```
 - `loader_major` - major version of the loader
 - `loader_minor` - minor version of the loader
-- `loader_name`  - null-terminated ascii string with a human-readable name of the loader
+- `loader_name`  - null-terminated ASCII string with a human-readable name of the loader
 - `acpi_rsdp_address` - physical address of the RSDP table, 0 if not applicable or not present
 
 ### ULTRA_PLATFORM_INVALID
@@ -383,7 +384,7 @@ struct module_info_attribute {
 ```
 
 - `header` - standard attribute header
-- `name` - null-terminated ascii name of the module, as specified in the configuration file
+- `name` - null-terminated ASCII name of the module, as specified in the configuration file
 - `physical_address` - address of the first byte of the loaded module
 - `length` - size of the module in memory
 

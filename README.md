@@ -18,7 +18,7 @@ struct ultra_boot_context {
 };
 ```
 
-- `attribute_count` - the number of the attributes in the `attributes` array
+- `attribute_count` - the number of attributes in the `attributes` array
 - `attributes` - pointer to a contiguous array of attributes provided by the loader.
 
 The following C macro can be used to retrieve the next attribute from current:
@@ -124,11 +124,11 @@ Each directive generates a separate `ultra_module_info_attribute`
 - *RSP - zero (for SysV ABI alignment)
 - CR3 - a valid address of a PML4 with the following mappings:
 
-| physical address      | virtual address       | length of the mapping |
+| virtual address       | physical address      | length of the mapping |
 |-----------------------|-----------------------|-----------------------|
 | 0x0000'0000'0000'0000 | 0x0000'0000'0000'0000 | 4 GB                  |
-| 0x0000'0000'0000'0000 | 0xFFFF'8000'0000'0000 | 4 GB                  |
-| ????????????????????? | 0xFFFF'FFFF'8000'0000 | ????????????????????? |
+| 0xFFFF'8000'0000'0000 | 0x0000'0000'0000'0000 | 4 GB                  |
+| 0xFFFF'FFFF'8000'0000 | ????????????????????? | ????????????????????? |
 
 The last mapping depends on configuration-specific settings:
 For higher half kernels loaded with allocate-anywhere set to on it contains
@@ -251,7 +251,7 @@ struct ultra_kernel_info_attribute {
 
 - `header` - standard attribute header
 - `physical_base` - physical address of the kernel base, page aligned
-- `virtual_base` - virtual address of the kernel basem, page aligned
+- `virtual_base` - virtual address of the kernel base, page aligned
 - `range_length` - number of bytes taken by the kernel, page aligned
 - `partition_type` - one of the following values:
 ```c
@@ -264,7 +264,7 @@ struct ultra_kernel_info_attribute {
 - `partiton_guid` - GUID of the partition that the kernel was loaded from, only valid for `ULTRA_PARTITION_TYPE_GPT`
 - `disk_index` - index of the disk the kernel was loaded from
 - `partition_index` - index of the partition the kernel was loaded from, index >= 4 implies EBR partition N - 4 for an MBR disk
-- `path_on_disk` - null terminated UTF-8 string, path to the kernel binary on the given partition
+- `path_on_disk` - null terminated UTF-8 string, path to the kernel binary on the partition
 
 ### ULTRA_PARTITION_TYPE_INVALID
 Reserved. If encountered, must be considered a fatal error.
@@ -278,7 +278,7 @@ Standard MBR partitioned, either MBR or EBR.
 ### ULTRA_PARTITION_TYPE_GPT
 Standard GPT partition, whether the disk also contains a valid MBR is undefined.
 
-`struct ultra_guid` is defined as:
+`ultra_guid` is defined as:
 ```c
 struct ultra_guid {
     uint32_t data1;
@@ -287,6 +287,7 @@ struct ultra_guid {
     uint8_t  data4[8];
 };
 ```
+Note that the structure is only guaranteed to be 8 byte aligned within `ultra_kernel_info_attribute`.
 
 ---
 
@@ -341,7 +342,7 @@ Memory tagged as reclaimable by the firmware. Usually contains ACPI tables.
 ### ULTRA_MEMORY_TYPE_NVS
 Same as MEMORY_TYPE_RESERVED. Consult the ACPI specification for more information.
 
-### MEMORY_TYPE_LOADER_RECLAIMABLE
+### ULTRA_MEMORY_TYPE_LOADER_RECLAIMABLE
 Memory reserved by the bootloader. Contains temporary GDT, all attributes, memory map itself, loader code, and everything
 else the loader has allocated the memory for. The actual location of all the aforementioned structures within this range is
 undefined.
@@ -419,7 +420,7 @@ struct ultra_framebuffer_attribute {
 ```
 
 - `header` - standard attribute header
-- `framebuffer` - describes the allocated framebuffer and has the following structure:
+- `fb` - describes the allocated framebuffer and has the following structure:
 
 ```c
 struct ultra_framebuffer {

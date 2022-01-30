@@ -88,14 +88,14 @@ Ultra protocol offers different types of modules: classic file-backed modules as
 
 The following options must be used to request a module:
 
-- `kernel-as-module` - (bool, optional, default=false) - requests the loader to pass the full kernel binary  
-as a separate module, this can be used for parsing additional debug information, enforcing memory protection  
+- `kernel-as-module` - (bool, optional, default=false) - requests the loader to pass the full kernel binary 
+as a separate module, this can be used for parsing additional debug information, enforcing memory protection
 for program headers from an ELF file or any other purpose.
 - `module` - (string) - shorthand alias for `module/path`
-- `module/type` (string, optional, default="file") - one of "file" or "memory". File modules require a path argument  
-and simply make the loader preload a file from disk into RAM. Memory modules are used to request general purpose  
+- `module/type` (string, optional, default="file") - one of "file" or "memory". File modules require a path argument
+and simply make the loader preload a file from disk into RAM. Memory modules are used to request general purpose
 contiguous zeroed memory allocations without any backing, and can be used for bootstrapping kernel allocators or any other purpose.
-- `module/size` (unsigned/string, optional*, default="auto") - defines the size of the module. Mandatory for "memory" modules.  
+- `module/size` (unsigned/string, optional*, default="auto") - defines the size of the module. Mandatory for "memory" modules.
 Can be used to truncate or extend "file" modules, if this is bigger than the file size, the rest of the memory is zeroed.
 - `module/name` - (string, optional, default=\<implementation-defined\>) - name of the module that the kernel receives
 - `module/path` - (string, optional*) - specifies the path for the module to load in a loader-defined format, if applicable
@@ -304,6 +304,9 @@ struct ultra_guid {
 ```
 Note that the structure is only guaranteed to be 8 byte aligned within `ultra_kernel_info_attribute`.
 
+### Any Other Value
+Reserved for future use, must be ignored by the kernel.
+
 ---
 
 ## ATTRIBUTE_MEMORY_MAP
@@ -374,7 +377,8 @@ Memory region reserved by the loader for the kernel stack. Not necessarily the s
 Memory region reserved by the loader for the loaded kernel binary (not the ELF copy).
 
 ### Any Other Value
-Reserved for future use. Must be considered same as `MEMORY_TYPE_RESERVED` if encountered by the kernel.  
+Reserved for future use. Must be considered same as `MEMORY_TYPE_RESERVED` if encountered by the kernel.
+
 The number of memory map entries can be calculated using the following C macro:
 
 ```c

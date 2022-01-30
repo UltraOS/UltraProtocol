@@ -15,7 +15,7 @@
 
 struct ultra_attribute_header {
     uint32_t type;
-    uint32_t size_in_bytes;
+    uint32_t size;
 };
 
 #define ULTRA_PLATFORM_INVALID 0
@@ -50,7 +50,7 @@ struct ultra_kernel_info_attribute {
 
     uint64_t physical_base;
     uint64_t virtual_base;
-    uint64_t range_length;
+    uint64_t size;
 
     uint64_t partition_type;
 
@@ -62,7 +62,7 @@ struct ultra_kernel_info_attribute {
     uint32_t disk_index;
     uint32_t partition_index;
 
-    char path_on_disk[256];
+    char fs_path[256];
 };
 
 #define ULTRA_MEMORY_TYPE_INVALID            0x00000000
@@ -77,21 +77,28 @@ struct ultra_kernel_info_attribute {
 
 struct ultra_memory_map_entry {
     uint64_t physical_address;
-    uint64_t size_in_bytes;
+    uint64_t size;
     uint64_t type;
 };
-#define MEMORY_MAP_ENTRY_COUNT(header) ((((header).size_in_bytes) - sizeof(struct ultra_attribute_header)) / sizeof(struct ultra_memory_map_entry))
+#define MEMORY_MAP_ENTRY_COUNT(header) ((((header).size) - sizeof(struct ultra_attribute_header)) / sizeof(struct ultra_memory_map_entry))
 
 struct ultra_memory_map_attribute {
     struct ultra_attribute_header header;
     struct ultra_memory_map_entry entries[];
 };
 
+#define ULTRA_MODULE_TYPE_INVALID       0
+#define ULTRA_MODULE_TYPE_FILE          1
+#define ULTRA_MODULE_TYPE_MEMORY        2
+#define ULTRA_MODULE_TYPE_ZEROED_MEMORY 3
+
 struct ultra_module_info_attribute {
     struct ultra_attribute_header header;
+    uint32_t reserved;
+    uint32_t type;
     char name[64];
     uint64_t physical_address;
-    uint64_t length;
+    uint64_t size;
 };
 
 struct ultra_command_line_attribute {
@@ -118,7 +125,7 @@ struct ultra_framebuffer_attribute {
 };
 
 struct ultra_boot_context {
-    uint32_t unused;
+    uint32_t reserved;
     uint32_t attribute_count;
     struct ultra_attribute_header attributes[];
 };

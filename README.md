@@ -19,12 +19,12 @@ struct ultra_boot_context {
 ```
 
 - `attribute_count` - the number of attributes in the `attributes` array
-- `attributes` - pointer to a contiguous array of attributes provided by the loader.
+- `attributes` - a contiguous array of attributes provided by the loader
 
 The following C macro can be used to retrieve the next attribute from current:
 
 ```c
-#define NEXT_ATTRIBUTE(current) ((struct ultra_attribute_header*)(((uint8_t*)(current)) + (current)->size_in_bytes))
+#define NEXT_ATTRIBUTE(current) ((struct ultra_attribute_header*)(((uint8_t*)(current)) + (current)->size))
 ```
 
 `ultra_attribute_header` and other structures are described in the following sections.
@@ -84,12 +84,22 @@ if this is the case
   
 ### Kernel Modules
                            
-Defines a list of files for the loader to preload into ram before handover.
+Ultra protocol offers different types of modules: classic file-backed modules as well as raw RAM allocations.
 
+The following options must be used to request a module:
+
+- `kernel-as-module` - (bool, optional, default=false) - requests the loader to pass the full kernel binary  
+as a separate module, this can be used for parsing additional debug information, enforcing memory protection for     
+program headers from an ELF file or any other purpose.
 - `module` - (string) - shorthand alias for `module/path`
+- `module/type` (string, optional, default="file") - one of "file" or "memory". File modules require a path argument  
+and simply make the loader preload a file from disk into RAM. Memory modules are used to request general purpose  
+contiguous zeroed memory allocations without any backing, and can be used for bootstrapping kernel allocators or any other purpose.
+- `module/size` (unsigned/string, optional*, default="auto") - defines the size of the module. Mandatory for "memory" modules.  
+Can be used to truncate or extend "file" modules, if this is bigger than the file size, the rest of the memory is zeroed.
 - `module/name` - (string, optional, default=\<implementation-defined\>) - name of the module that the kernel receives
-- `module/path` - (string) - specifies the path for the module to load in a loader-defined format, if applicable.
-- `module/load-at` (unsigned/string, optional, unique, default="anywhere") - specifies the load address for the module
+- `module/path` - (string, optional*) - specifies the path for the module to load in a loader-defined format, if applicable
+- `module/load-at` (unsigned/string, optional, default="anywhere") - specifies the load address for the module or "anywhere"
                   
 Each directive generates a separate `ultra_module_info_attribute`
 
@@ -97,13 +107,17 @@ Each directive generates a separate `ultra_module_info_attribute`
 
 # State After Handoff
 
+This section describes the system state for each supported architecture that system software must expect after gaining control.
+
 ## x86
+
+Page size is defined as 4096 bytes.
+
 - A20 - enabled
 - R/EFLAGS - zeroed, reserved bit 1 set
 - IDTR - contents are undefined
 - GDTR - set to a valid GDT with at least ring 0 flat code/data descriptors
 - Long/protected mode (with paging) - set as determined by the kernel binary
-
 - CS - set to a flat ring 0 code segment
 - DS, ES, FS, GS, SS - set to a flat ring 0 data segment
 
@@ -136,6 +150,7 @@ the kernel binary mappings with an arbitrary physical base picked by the loader.
 For all other kernels it's a direct mapping of the first 2GB of physical ram.
 
 Address pointed to by CR3 is located somewhere within ULTRA_MEMORY_TYPE_LOADER_RECLAIMABLE.
+Whether the memory is mapped using 4K/2M/1G pages is undefined.             
 
 The contents of all other registers are unspecified.
 
@@ -149,7 +164,7 @@ Every attribute has a distinct type and starts with the following header:
 ```c
 struct ultra_attribute_header {
     uint32_t type;
-    uint32_t size_in_bytes;
+    uint32_t size;
 };
 ```
 
@@ -164,7 +179,7 @@ struct ultra_attribute_header {
 #define ULTRA_ATTRIBUTE_FRAMEBUFFER_INFO 6
 ```
 
-- `size_in_bytes` - size of the entire attribute including the header. This size is often use for calculating the number of entries
+- `size` - size of the entire attribute including the header. This size is often use for calculating the number of entries
   in a variable length attribute. This isn't always possible, because sometimes the size is increased on purpose to align entries to 8 bytes.
   Attributes like this are explicitly documented and provide a separate member that indicates the actual size of the variable size field.
 
@@ -233,11 +248,11 @@ struct ultra_kernel_info_attribute {
 
     uint64_t physical_base;
     uint64_t virtual_base;
-    uint64_t range_length;
+    uint64_t size;
 
     uint64_t partition_type;
 
-    // only valid if partition_type == ULTRA_PARTITION_TYPE_GPT
+    // only valid if partition_type == PARTITION_TYPE_GPT
     struct ultra_guid disk_guid;
     struct ultra_guid partition_guid;
 
@@ -245,14 +260,14 @@ struct ultra_kernel_info_attribute {
     uint32_t disk_index;
     uint32_t partition_index;
 
-    char path_on_disk[256];
+    char fs_path[256];
 };
 ```
 
 - `header` - standard attribute header
 - `physical_base` - physical address of the kernel base, page aligned
 - `virtual_base` - virtual address of the kernel base, page aligned
-- `range_length` - number of bytes taken by the kernel, page aligned
+- `size` - number of bytes taken by the kernel, page aligned
 - `partition_type` - one of the following values:
 ```c
 #define ULTRA_PARTITION_TYPE_INVALID 0
@@ -264,7 +279,7 @@ struct ultra_kernel_info_attribute {
 - `partiton_guid` - GUID of the partition that the kernel was loaded from, only valid for `ULTRA_PARTITION_TYPE_GPT`
 - `disk_index` - index of the disk the kernel was loaded from
 - `partition_index` - index of the partition the kernel was loaded from, index >= 4 implies EBR partition N - 4 for an MBR disk
-- `path_on_disk` - null terminated UTF-8 string, path to the kernel binary on the partition
+- `fs_path` - null terminated UTF-8 string, absolute POSIX path to the kernel binary on the partition
 
 ### ULTRA_PARTITION_TYPE_INVALID
 Reserved. If encountered, must be considered a fatal error.
@@ -307,12 +322,12 @@ struct memory_map_attribute {
 ```c
 struct ultra_memory_map_entry {
     uint64_t physical_address;
-    uint64_t size_in_bytes;
+    uint64_t size;
     uint64_t type;
 };
 ```
 - `physical_address` - first byte of the physical range covered by this entry
-- `size_in_bytes` - size of this range
+- `size` - size of this range
 - `type` - one of the following values:
 
 ```c
@@ -363,7 +378,7 @@ Reserved for future use. Must be considered same as `MEMORY_TYPE_RESERVED` if en
 The number of memory map entries can be calculated using the following C macro:
 
 ```c
-#define MEMORY_MAP_ENTRY_COUNT(header) ((((header).size_in_bytes) - sizeof(struct ultra_attribute_header)) / sizeof(struct ultra_memory_map_entry))
+#define MEMORY_MAP_ENTRY_COUNT(header) ((((header).size) - sizeof(struct ultra_attribute_header)) / sizeof(struct ultra_memory_map_entry))
 ```
 
 ---
@@ -376,18 +391,19 @@ This attribute provides information necessary to locate a kernel module in memor
 and has the following structure:
 
 ```c
-struct module_info_attribute {
+struct ultra_module_info_attribute {
     struct ultra_attribute_header header;
     char name[64];
     uint64_t physical_address;
-    uint64_t length;
+    uint64_t size;
 };
 ```
 
 - `header` - standard attribute header
 - `name` - null-terminated ASCII name of the module, as specified in the configuration file
-- `physical_address` - address of the first byte of the loaded module
-- `length` - size of the module in memory
+or `"__KERNEL__"` for the autogenerated kernel binary module (if enabled)
+- `physical_address` - address of the first byte of the loaded module, page aligned
+- `size` - size of the module as specified in `module/size`, the actual size in RAM is this value rounded up to page size
 
 ---
 
@@ -404,8 +420,8 @@ struct command_line_attribute {
 - `header` - standard attribute header
 - `text` - null terminated ASCII command line, as specified in the configuration file
 
-Length of the command line is not artifically limited in any way but must fit in the `header.size_in_bytes` field,
-which is 32 bits wide. Note that `header.size_in_bytes` is not necessarily equal to the length of the command line
+Length of the command line is not artificially limited in any way but must fit in the `header.size` field,
+which is 32 bits wide. Note that `header.size` is not necessarily equal to the length of the command line
 because of alignment reasons.
 
 ---

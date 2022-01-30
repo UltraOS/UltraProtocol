@@ -89,8 +89,8 @@ Ultra protocol offers different types of modules: classic file-backed modules as
 The following options must be used to request a module:
 
 - `kernel-as-module` - (bool, optional, default=false) - requests the loader to pass the full kernel binary  
-as a separate module, this can be used for parsing additional debug information, enforcing memory protection for     
-program headers from an ELF file or any other purpose.
+as a separate module, this can be used for parsing additional debug information, enforcing memory protection  
+for program headers from an ELF file or any other purpose.
 - `module` - (string) - shorthand alias for `module/path`
 - `module/type` (string, optional, default="file") - one of "file" or "memory". File modules require a path argument  
 and simply make the loader preload a file from disk into RAM. Memory modules are used to request general purpose  
@@ -133,7 +133,7 @@ Page size is defined as 4096 bytes.
 - RIP - set to the entrypoint as specified by the kernel binary
 - RDI - `ultra_boot_context*`
 - RSI - protocol magic
-- RAX, RCX, RDX, RBX, RBP, r8, r9, r10, r11, r12, r13, r14, r15 - zeroed
+- RAX, RCX, RDX, RBX, RBP, R8, R9, R10, R11, R12, R13, R14, R15 - zeroed
 - RSP - set to a valid stack pointer as determined by the configuration, aligned according to SysV ABI
 - *RSP - zero (for SysV ABI alignment)
 - CR3 - a valid address of a PML4 with the following mappings:
@@ -149,7 +149,7 @@ For higher half kernels loaded with allocate-anywhere set to on it contains
 the kernel binary mappings with an arbitrary physical base picked by the loader.
 For all other kernels it's a direct mapping of the first 2GB of physical ram.
 
-Address pointed to by CR3 is located somewhere within ULTRA_MEMORY_TYPE_LOADER_RECLAIMABLE.
+Address pointed to by CR3 is located somewhere within ULTRA_MEMORY_TYPE_LOADER_RECLAIMABLE.  
 Whether the memory is mapped using 4K/2M/1G pages is undefined.             
 
 The contents of all other registers are unspecified.

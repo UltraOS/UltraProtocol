@@ -460,16 +460,20 @@ struct ultra_framebuffer {
 - `format` - the format of the allocated framebuffer, and is one of the following values:
 
 ```c
-#define ULTRA_FB_FORMAT_INVALID 0
-#define ULTRA_FB_FORMAT_RBG     1
-#define ULTRA_FB_FORMAT_RGBA    2
+#define ULTRA_FB_FORMAT_INVALID  0
+#define ULTRA_FB_FORMAT_RGB888   1
+#define ULTRA_FB_FORMAT_BGR888   2
+#define ULTRA_FB_FORMAT_RGBX8888 3
+#define ULTRA_FB_FORMAT_XRGB8888 4
 ```
+
+Framebuffer format types are very similar to `DRM_FORMAT_*` and are defined as follows:
 
 ### ULTRA_FB_FORMAT_INVALID
 Reserved. If encountered, must be considered a fatal error.
 
-### ULTRA_FB_FORMAT_RBG
-This is a standard RBG format.
+### ULTRA_FB_FORMAT_RGB888
+Standard RBG format.
 
 Layout of each pixel this format:
 
@@ -478,9 +482,29 @@ Layout of each pixel this format:
 | color | BLUE    | GREEN    | RED       |
 
 `bpp` must be set to 24.
+                
+### ULTRA_FB_FORMAT_BGR888
+Standard BGR format.
 
-### ULTRA_FB_FORMAT_RGBA
-This is a standard RGB format padded to 32 bits.
+Layout of each pixel this format:
+
+| bits  | 0 ... 8 | 8 ... 16 | 16 ... 24 |
+|-------|---------|----------|-----------|
+| color | RED     | GREEN    | BLUE      |
+
+`bpp` must be set to 24.
+               
+### ULTRA_FB_FORMAT_RGBX8888
+Standard RGB format padded to 32 bits.
+
+Layout of each pixel for this format:
+
+| bits  | 0 ... 8 | 8 ... 16 | 16 ... 24 | 24 ... 32 |
+|-------|---------|----------|-----------|-----------|
+| color | UNUSED  | BLUE     | GREEN     | RED       |                          
+
+### ULTRA_FB_FORMAT_XRGB8888
+Standard RGB format padded to 32 bits.
 
 Layout of each pixel for this format:
 

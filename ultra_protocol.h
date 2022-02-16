@@ -106,9 +106,11 @@ struct ultra_command_line_attribute {
     char text[];
 };
 
-#define ULTRA_FB_FORMAT_INVALID 0
-#define ULTRA_FB_FORMAT_RBG     1
-#define ULTRA_FB_FORMAT_RGBA    2
+#define ULTRA_FB_FORMAT_INVALID  0
+#define ULTRA_FB_FORMAT_RGB888   1
+#define ULTRA_FB_FORMAT_BGR888   2
+#define ULTRA_FB_FORMAT_RGBX8888 3
+#define ULTRA_FB_FORMAT_XRGB8888 4
 
 struct ultra_framebuffer {
     uint32_t width;

@@ -475,7 +475,7 @@ Reserved. If encountered, must be considered a fatal error.
 ### ULTRA_FB_FORMAT_RGB888
 Standard RBG format.
 
-Layout of each pixel this format:
+Layout of each pixel (low to high memory address):
 
 | bits  | 0 ... 8 | 8 ... 16 | 16 ... 24 |
 |-------|---------|----------|-----------|
@@ -486,7 +486,7 @@ Layout of each pixel this format:
 ### ULTRA_FB_FORMAT_BGR888
 Standard BGR format.
 
-Layout of each pixel this format:
+Layout of each pixel (low to high memory address):
 
 | bits  | 0 ... 8 | 8 ... 16 | 16 ... 24 |
 |-------|---------|----------|-----------|
@@ -497,7 +497,7 @@ Layout of each pixel this format:
 ### ULTRA_FB_FORMAT_RGBX8888
 Standard RGB format padded to 32 bits.
 
-Layout of each pixel for this format:
+Layout of each pixel (low to high memory address):
 
 | bits  | 0 ... 8 | 8 ... 16 | 16 ... 24 | 24 ... 32 |
 |-------|---------|----------|-----------|-----------|
@@ -506,7 +506,7 @@ Layout of each pixel for this format:
 ### ULTRA_FB_FORMAT_XRGB8888
 Standard RGB format padded to 32 bits.
 
-Layout of each pixel for this format:
+Layout of each pixel (low to high memory address):
 
 | bits  | 0 ... 8 | 8 ... 16 | 16 ... 24 | 24 ... 32 |
 |-------|---------|----------|-----------|-----------|

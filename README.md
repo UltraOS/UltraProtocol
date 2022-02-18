@@ -118,7 +118,7 @@ More details are provided in the "State After Handoff" section. Only applicable 
 - `null-guard` - (bool, optional, default=false) - if set to `true`, the first physical page is not identity mapped to prevent
 accidental `NULL` accesses. Only applicable for 64-bit kernels.
 
-- `higher-half-exclusive` - (bool, optional, default=false) - if set to `true`, relocates all `address` fields to higher half  
+- `higher-half-exclusive` - (bool, optional, default=false) - if set to `true`, relocates all `address` fields to higher half
 and doesn't provide any identity mappings for lower half. Only applicable for 64-bit higher half kernels. 
 
 ---

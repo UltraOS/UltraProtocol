@@ -148,6 +148,10 @@ Page size is defined as 4096 bytes.
 - *ESP - zero (for SysV ABI alignment)
 
 ### AMD64
+
+Higher half is defined as `0xFFFF'8000'0000'0000`  
+The kernel is considered higher half if it wants to be loaded at or above `0xFFFF'FFFF'8000'0000`
+
 - RIP - set to the entrypoint as specified by the kernel binary
 - RDI - `ultra_boot_context*`
 - RSI - protocol magic
@@ -155,9 +159,6 @@ Page size is defined as 4096 bytes.
 - RSP - set to a valid stack pointer as determined by the configuration, aligned according to SysV ABI
 - *RSP - zero (for SysV ABI alignment)
 - CR3 - a valid address of a PML4 with the following mappings:
-             
-Higher half is defined as `0xFFFF'8000'0000'0000`  
-The kernel is considered higher half if it wants to be loaded at or above `0xFFFF'FFFF'8000'0000`
 
 | virtual address       | physical address      | length of the mapping    |
 |-----------------------|-----------------------|--------------------------|

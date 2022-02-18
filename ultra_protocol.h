@@ -133,6 +133,6 @@ struct ultra_boot_context {
     uint32_t attribute_count;
     struct ultra_attribute_header attributes[];
 };
-#define ULTRA_NEXT_ATTRIBUTE(current) ((struct ultra_attribute_header*)(((uint8_t*)(current)) + (current)->size_in_bytes))
+#define ULTRA_NEXT_ATTRIBUTE(current) ((struct ultra_attribute_header*)(((uint8_t*)(current)) + (current)->size))
 
 #define ULTRA_MAGIC 0x554c5442

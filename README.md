@@ -109,6 +109,17 @@ Can be used to truncate or extend "file" modules, if this is bigger than the fil
 - `module/load-at` (unsigned/string, optional, default="anywhere") - specifies the load address for the module or "anywhere"
                   
 Each directive generates a separate `ultra_module_info_attribute`
+        
+### Miscellaneous
+        
+- `identity-map-lower-half` - (bool, optional, default=true) - if set to `true`, identity maps the entire RAM in the lower half.
+More details are provided in the "State After Handoff" section. Only applicable for 64-bit higher half kernels.
+   
+- `null-guard` - (bool, optional, default=false) - if set to `true`, the first physical page is not identity mapped to prevent
+accidental `NULL` accesses. Only applicable for 64-bit kernels.
+
+- `higher-half-exclusive` - (bool, optional, default=false) - if set to `true`, relocates all `address` fields to higher half  
+and doesn't provide any identity mappings for lower half. Only applicable for 64-bit higher half kernels. 
 
 ---
 
@@ -144,20 +155,30 @@ Page size is defined as 4096 bytes.
 - RSP - set to a valid stack pointer as determined by the configuration, aligned according to SysV ABI
 - *RSP - zero (for SysV ABI alignment)
 - CR3 - a valid address of a PML4 with the following mappings:
+             
+Higher half is defined as `0xFFFF'8000'0000'0000`  
+The kernel is considered higher half if it wants to be loaded at or above `0xFFFF'FFFF'8000'0000`
 
-| virtual address       | physical address      | length of the mapping |
-|-----------------------|-----------------------|-----------------------|
-| 0x0000'0000'0000'0000 | 0x0000'0000'0000'0000 | 4 GB                  |
-| 0xFFFF'8000'0000'0000 | 0x0000'0000'0000'0000 | 4 GB                  |
-| 0xFFFF'FFFF'8000'0000 | ????????????????????? | ????????????????????? |
+| virtual address       | physical address      | length of the mapping    |
+|-----------------------|-----------------------|--------------------------|
+| 0x0000'0000'0000'0000 | 0x0000'0000'0000'0000 | 4 GiB or maximum address |
+| 0xFFFF'8000'0000'0000 | 0x0000'0000'0000'0000 | 4 GiB or maximum address |
+| 0xFFFF'FFFF'8000'0000 | ????????????????????? | ?????????????????????    |
+                                                                           
+Maximum address is defined by the address of the last byte of the last entry in the memory map.  
+In case the last memory map entry ends below the 4 GiB mark, this
+mapping is extended to meet it anyway.
+ 
+The first mapping is not provided for `higher-half-exclusive` mode 
+or in case `identity-map-lower-half` is set to `false`.
 
-The last mapping depends on configuration-specific settings:
-For higher half kernels loaded with allocate-anywhere set to on it contains
-the kernel binary mappings with an arbitrary physical base picked by the loader.
-For all other kernels it's a direct mapping of the first 2GB of physical ram.
+For higher half kernels loaded with `allocate-anywhere` set to `true`
+the last mapping contains the kernel binary mappings with an arbitrary
+physical base picked by the loader. 
+For all other kernels it is a direct mapping of the first 2 GiB of physical ram.
 
-Address pointed to by CR3 is located somewhere within ULTRA_MEMORY_TYPE_LOADER_RECLAIMABLE.  
-Whether the memory is mapped using 4K/2M/1G pages is undefined.             
+Address pointed to by CR3 is located somewhere within `ULTRA_MEMORY_TYPE_LOADER_RECLAIMABLE`.  
+Whether the memory is mapped using 4K/2M/1G pages is unspecified.             
 
 The contents of all other registers are unspecified.
 
@@ -295,10 +316,11 @@ Reserved. If encountered, must be considered a fatal error.
 Unpartitioned device without an MBR/GPT header, the entire disk treated as one file system.
 
 ### ULTRA_PARTITION_TYPE_MBR
-Standard MBR partitioned, either MBR or EBR.
+Standard MBR partition, either MBR or EBR.
 
 ### ULTRA_PARTITION_TYPE_GPT
-Standard GPT partition, whether the disk also contains a valid MBR is undefined.
+Standard GPT partition, whether the device also contains a valid MBR is unspecified
+as GPT always takes precedence.
 
 `ultra_guid` is defined as:
 ```c
@@ -359,7 +381,7 @@ Reserved. If encountered, must be considered a fatal error.
 General purpose memory free for use by the kernel.
 
 ### ULTRA_MEMORY_TYPE_RESERVED
-Memory reserved by the firmware. Contents and read/write operations are undefined behavior.
+Memory reserved by the firmware.
                
 ### ULTRA_MEMORY_TYPE_RECLAIMABLE
 Memory tagged as reclaimable by the firmware. Usually contains ACPI tables.
@@ -384,12 +406,12 @@ Memory region reserved by the loader for the kernel stack. Not necessarily the s
 Memory region reserved by the loader for the loaded kernel binary (not the ELF copy).
 
 ### Any Other Value
-Reserved for future use. Must be considered same as `MEMORY_TYPE_RESERVED` if encountered by the kernel.
+Reserved for future use. Must be considered same as `ULTRA_MEMORY_TYPE_RESERVED` if encountered by the kernel.
 
 The number of memory map entries can be calculated using the following C macro:
 
 ```c
-#define MEMORY_MAP_ENTRY_COUNT(header) ((((header).size) - sizeof(struct ultra_attribute_header)) / sizeof(struct ultra_memory_map_entry))
+#define ULTRA_MEMORY_MAP_ENTRY_COUNT(header) ((((header).size) - sizeof(struct ultra_attribute_header)) / sizeof(struct ultra_memory_map_entry))
 ```
 
 ---
@@ -405,7 +427,7 @@ and has the following structure:
 struct ultra_module_info_attribute {
     struct ultra_attribute_header header;
     char name[64];
-    uint64_t physical_address;
+    uint64_t address;
     uint64_t size;
 };
 ```
@@ -413,7 +435,7 @@ struct ultra_module_info_attribute {
 - `header` - standard attribute header
 - `name` - null-terminated ASCII name of the module, as specified in the configuration file
 or `"__KERNEL__"` for the autogenerated kernel binary module (if enabled)
-- `physical_address` - address of the first byte of the loaded module, page aligned
+- `address` - address of the loaded module, page aligned
 - `size` - size of the module as specified in `module/size`, the actual size in RAM is this value rounded up to page size
 
 ---
@@ -456,7 +478,7 @@ struct ultra_framebuffer {
     uint32_t pitch;
     uint16_t bpp;
     uint16_t format;
-    uint64_t physical_address;
+    uint64_t address;
 };
 ```
 
@@ -521,7 +543,7 @@ Layout of each pixel (low to high memory address):
 
 `bpp` must be set to 32.
 
-- `physical_address` - address of the first physical byte of the allocated framebuffer
+- `address` - address of the allocated framebuffer
 
 ---
  

@@ -90,14 +90,13 @@ struct ultra_memory_map_attribute {
 #define ULTRA_MODULE_TYPE_INVALID       0
 #define ULTRA_MODULE_TYPE_FILE          1
 #define ULTRA_MODULE_TYPE_MEMORY        2
-#define ULTRA_MODULE_TYPE_ZEROED_MEMORY 3
 
 struct ultra_module_info_attribute {
     struct ultra_attribute_header header;
     uint32_t reserved;
     uint32_t type;
     char name[64];
-    uint64_t physical_address;
+    uint64_t address;
     uint64_t size;
 };
 
@@ -118,7 +117,7 @@ struct ultra_framebuffer {
     uint32_t pitch;
     uint16_t bpp;
     uint16_t format;
-    uint64_t physical_address;
+    uint64_t address;
 };
 
 struct ultra_framebuffer_attribute {

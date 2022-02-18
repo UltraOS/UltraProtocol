@@ -80,7 +80,7 @@ struct ultra_memory_map_entry {
     uint64_t size;
     uint64_t type;
 };
-#define MEMORY_MAP_ENTRY_COUNT(header) ((((header).size) - sizeof(struct ultra_attribute_header)) / sizeof(struct ultra_memory_map_entry))
+#define ULTRA_MEMORY_MAP_ENTRY_COUNT(header) ((((header).size) - sizeof(struct ultra_attribute_header)) / sizeof(struct ultra_memory_map_entry))
 
 struct ultra_memory_map_attribute {
     struct ultra_attribute_header header;
@@ -127,10 +127,13 @@ struct ultra_framebuffer_attribute {
 };
 
 struct ultra_boot_context {
-    uint32_t reserved;
+    uint8_t protocol_major;
+    uint8_t protocol_minor;
+    uint16_t reserved;
+
     uint32_t attribute_count;
     struct ultra_attribute_header attributes[];
 };
-#define NEXT_ATTRIBUTE(current) ((struct ultra_attribute_header*)(((uint8_t*)(current)) + (current)->size_in_bytes))
+#define ULTRA_NEXT_ATTRIBUTE(current) ((struct ultra_attribute_header*)(((uint8_t*)(current)) + (current)->size_in_bytes))
 
 #define ULTRA_MAGIC 0x554c5442

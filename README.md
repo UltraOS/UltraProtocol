@@ -12,19 +12,24 @@ After handoff, the kernel is provided with a boot context that has the following
 
 ```c
 struct ultra_boot_context {
-    uint32_t unused;
+    uint8_t protocol_major;
+    uint8_t protocol_minor;
+    uint16_t reserved;
+
     uint32_t attribute_count;
     struct ultra_attribute_header attributes[];
 };
 ```
-
+         
+- `protocol_major` - major version of the protocol, valid versions start at `1`
+- `protocol_minor` - minor version of the protocol, valid versions start at `0`
 - `attribute_count` - the number of attributes in the `attributes` array
 - `attributes` - a contiguous array of attributes provided by the loader
 
 The following C macro can be used to retrieve the next attribute from current:
 
 ```c
-#define NEXT_ATTRIBUTE(current) ((struct ultra_attribute_header*)(((uint8_t*)(current)) + (current)->size))
+#define ULTRA_NEXT_ATTRIBUTE(current) ((struct ultra_attribute_header*)(((uint8_t*)(current)) + (current)->size))
 ```
 
 `ultra_attribute_header` and other structures are described in the following sections.
@@ -44,8 +49,10 @@ In case the kernel detects an invalid magic number the `ultra_boot_context*` mus
 ---
 
 # Protocol Features And Options
+         
+Current protocol version is defined as `1.0`.
 
-This section defines various options and featrues defined by the protocol. The actual way to enable/set
+This section defines various options and features defined by the protocol. The actual way to enable/set
 an option is loader specific and is defined by its configuration file format.
 
 ### Binary Options

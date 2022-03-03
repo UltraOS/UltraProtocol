@@ -82,11 +82,14 @@ Defines various options related to the address passed in the arch-specific SP re
               
 Defines options related to the video-mode set by the loader before handover.
 
-- `video-mode` - (string) - shorthand, allowed values are the literal "unset" or `null`. `ultra_framebuffer_attribute` is not generated
-if this is the case
-- `video-mode/width` - (unsigned, optional, default=1024) - requests a specific framebuffer width
-- `video-mode/height` - (unsigned, optional, default=768) - requests a specific framebuffer height
-- `video-mode/bpp` (unsigned, optional, default=32) - requests a specific framebuffer bits per pixel value                                                                             
+- `video-mode` - (string, optional, default="auto") - shorthand. `"auto"` implies native width/height, `null` or `"unset"` are also
+allowed, `ultra_framebuffer_attribute` is not generated if this is the case.
+- `video-mode/width` - (unsigned, optional, default=\<native\>) - requests a specific framebuffer width
+- `video-mode/height` - (unsigned, optional, default=\<native\>) - requests a specific framebuffer height
+- `video-mode/bpp` (unsigned, optional, default=32) - requests a specific framebuffer bits per pixel value
+- `video-mode/format` (string, optional, default="auto") - requests a specific framebuffer format, one of `"auto"`,
+`"rgb888"`, `"bgr888"`, `"rgbx8888"`, `"xrgb8888"` (any case). This option is not affected by `constraint` and
+is always matched exactly if specified. 
 - `video-mode/constraint` (string, optional, default="at-least") - specifies a constraint for the video mode, one of "at-least", "exactly"
   
 ### Kernel Modules

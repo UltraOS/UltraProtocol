@@ -87,9 +87,9 @@ struct ultra_memory_map_attribute {
     struct ultra_memory_map_entry entries[];
 };
 
-#define ULTRA_MODULE_TYPE_INVALID       0
-#define ULTRA_MODULE_TYPE_FILE          1
-#define ULTRA_MODULE_TYPE_MEMORY        2
+#define ULTRA_MODULE_TYPE_INVALID 0
+#define ULTRA_MODULE_TYPE_FILE    1
+#define ULTRA_MODULE_TYPE_MEMORY  2
 
 struct ultra_module_info_attribute {
     struct ultra_attribute_header header;

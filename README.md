@@ -189,7 +189,24 @@ The contents of all other registers are unspecified.
 
 # Attributes
 
-The way the loader provides various information to the kernel is via attributes.  
+The way the loader provides various information to the kernel is via attributes.
+
+Guarantees about the attribute array & attributes:
+- All attributes are guaranteed to be aligned on an 8 (or more if required) byte
+boundary.
+- The location of any specific attribute within the array is not fixed
+unless specified otherwise (in the attribute description).
+- All attributes of the same type are guaranteed to be a contiguous stream.
+- Every attribute type can only appear in the attribute array once unless
+specified otherwise (in the attribute description).
+- All attribute types are guaranteed to have `ultra_attribute_header`
+as the first member, this includes both current & future attributes.
+- It is safe to ignore any unknown attribute types.
+- All currently defined attributes are guaranteed to keep the same layout
+in the future protocol versions, but might have new members added at the end,
+which shouldn't affect any valid software as the header `size` field will be adjusted
+accordingly.
+
 Every attribute has a distinct type and starts with the following header:
 
 ```c
@@ -218,10 +235,7 @@ struct ultra_attribute_header {
 
 # Attribute Types
 
-This section describes all currently implemented attribute types and their structure.  
-Each attribute type occurs in the `ultra_boot_context` exactly once unless specified otherwise.  
-Kernel must ignore any attribute type that it's not familiar with.  
-it's guaranteed that all future attribute types will start with an `ultra_attribute_header` as well.  
+This section describes all currently implemented attribute types and their structure.
 
 ---
 
@@ -231,6 +245,8 @@ Reserved. If encountered, must be considered a fatal error.
 ---
 
 ## ULTRA_ATTRIBUTE_PLATFORM_INFO
+This attribute is guaranteed to be the first entry in the attribute array.
+
 This attribute provides various information about the platform and has the following structure:
 
 ```c
@@ -272,6 +288,9 @@ Reserved for future use, must be ignored by the kernel.
 ---
 
 ## ULTRA_ATTRIBUTE_KERNEL_INFO
+This attribute is guaranteed to be the second entry in the attribute array.
+
+This attribute provides various information about the kernel binary and has the following structure:
 
 ```c
 struct ultra_kernel_info_attribute {

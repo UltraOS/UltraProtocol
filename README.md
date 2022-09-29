@@ -162,15 +162,14 @@ The kernel is considered higher half if it wants to be loaded at or above `0xFFF
 - RSP - set to a valid stack pointer as determined by the configuration, aligned according to SysV ABI
 - CR3 - a valid address of a PML4 with the following mappings:
 
-| virtual address       | physical address      | length of the mapping    |
-|-----------------------|-----------------------|--------------------------|
-| 0x0000'0000'0000'0000 | 0x0000'0000'0000'0000 | 4 GiB or maximum address |
-| 0xFFFF'8000'0000'0000 | 0x0000'0000'0000'0000 | 4 GiB or maximum address |
-| 0xFFFF'FFFF'8000'0000 | ????????????????????? | ?????????????????????    |
-                                                                           
-Maximum address is defined by the address of the last byte of the last entry in the memory map.  
-In case the last memory map entry ends below the 4 GiB mark, this
-mapping is extended to meet it anyway.
+| virtual address       | physical address      | length of the mapping     |
+|-----------------------|-----------------------|---------------------------|
+| 0x0000'0000'0000'0000 | 0x0000'0000'0000'0000 | 4 GiB + any entries above |
+| 0xFFFF'8000'0000'0000 | 0x0000'0000'0000'0000 | 4 GiB + any entries above |
+| 0xFFFF'FFFF'8000'0000 | ????????????????????? | ?????????????????????     |
+                                                           
+First two mappings are guaranteed to cover the first 4 GiB of physical memory
+as well as any other entries present in the memory map on top of that.
  
 The first mapping is not provided for `higher-half-exclusive` mode 
 or in case `identity-map-lower-half` is set to `false`.

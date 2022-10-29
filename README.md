@@ -538,7 +538,7 @@ struct ultra_framebuffer {
     uint32_t pitch;
     uint16_t bpp;
     uint16_t format;
-    uint64_t address;
+    uint64_t physical_address;
 };
 ```
 
@@ -605,7 +605,7 @@ Layout of each pixel (low to high memory address):
 
 `bpp` must be set to 32.
 
-- `address` - address of the allocated framebuffer
+- `physical_address` - address of the allocated framebuffer
 
 ---
 

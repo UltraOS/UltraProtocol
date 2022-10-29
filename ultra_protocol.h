@@ -117,7 +117,7 @@ struct ultra_framebuffer {
     uint32_t pitch;
     uint16_t bpp;
     uint16_t format;
-    uint64_t address;
+    uint64_t physical_address;
 };
 
 struct ultra_framebuffer_attribute {

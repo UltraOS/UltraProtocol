@@ -20,7 +20,7 @@ struct ultra_boot_context {
     struct ultra_attribute_header attributes[];
 };
 ```
-         
+
 - `protocol_major` - major version of the protocol, valid versions start at `1`
 - `protocol_minor` - minor version of the protocol, valid versions start at `0`
 - `attribute_count` - the number of attributes in the `attributes` array
@@ -49,20 +49,29 @@ In case the kernel detects an invalid magic number the `ultra_boot_context*` mus
 ---
 
 # Protocol Features And Options
-         
+
 Current protocol version is defined as `1.0`.
 
 This section defines various options and features defined by the protocol. The actual way to enable/set
 an option is loader specific and is defined by its configuration file format.
 
 ### Binary Options
- 
+
 Defines various kernel binary related options.
 
 - `binary` - (string) - shorthand alias for `binary/path`
 - `binary/path` - (string) - specifies the path to the kernel in a loader-defined format, if applicable.
 - `binary/allocate-anywhere` (bool, optional, default=false) - allows the kernel physical memory mappings to be
-allocated anywhere in memory. Only valid for 64 bit higher-half kernels.
+  allocated anywhere in memory. Only valid for 64 bit higher-half kernels.
+
+### Page Table Options
+
+Defines various options related to the page table properties set up at handover.
+
+- `page-table/levels` - (integer, optional, default=4) - specifies the desired depth of the page table
+- `page-table/constraint` - (string, optional, default="maximum") - specifies the constraint for the "levels" value, one of "maximum", "at-least", "exactly"
+- `page-table/null-guard` - (bool, optional, default=false) - if set to `true`, the first physical page is not identity mapped to prevent
+  accidental `NULL` accesses.
 
 ### Command Line
 
@@ -73,56 +82,50 @@ Defines a command line to give to the kernel. This attribute is not generated if
 ### Binary Stack
 
 Defines various options related to the address passed in the arch-specific SP register on handover.
-           
+
 - `stack` (string/unsigned) - shorthand alias for `stack/size`. Also allows a literal "auto".
 - `stack/size` (unsigned, optional, default=16K) - page aligned size of the stack to allocate.
 - `stack/allocate-at` (string/unsigned, default=\<implementation-defined\>) - address where to allocate the stack
 
 ### Video Mode & Framebuffer
-              
+
 Defines options related to the video-mode set by the loader before handover.
 
 - `video-mode` - (string, optional, default="auto") - shorthand. `"auto"` implies native width/height, `null` or `"unset"` are also
-allowed, `ultra_framebuffer_attribute` is not generated if this is the case.
+  allowed, `ultra_framebuffer_attribute` is not generated if this is the case.
 - `video-mode/width` - (unsigned, optional, default=\<native\>) - requests a specific framebuffer width
 - `video-mode/height` - (unsigned, optional, default=\<native\>) - requests a specific framebuffer height
 - `video-mode/bpp` (unsigned, optional, default=32) - requests a specific framebuffer bits per pixel value
 - `video-mode/format` (string, optional, default="auto") - requests a specific framebuffer format, one of `"auto"`,
-`"rgb888"`, `"bgr888"`, `"rgbx8888"`, `"xrgb8888"` (any case). This option is not affected by `constraint` and
-is always matched exactly if specified. 
+  `"rgb888"`, `"bgr888"`, `"rgbx8888"`, `"xrgb8888"` (any case). This option is not affected by `constraint` and
+  is always matched exactly if specified.
 - `video-mode/constraint` (string, optional, default="at-least") - specifies a constraint for the video mode, one of "at-least", "exactly"
-  
+
 ### Kernel Modules
-                           
+
 Ultra protocol offers different types of modules: classic file-backed modules as well as raw RAM allocations.
 
 The following options must be used to request a module:
 
-- `kernel-as-module` - (bool, optional, default=false) - requests the loader to pass the full kernel binary 
-as a separate module, this can be used for parsing additional debug information, enforcing memory protection
-for program headers from an ELF file or any other purpose.
+- `kernel-as-module` - (bool, optional, default=false) - requests the loader to pass the full kernel binary
+  as a separate module, this can be used for parsing additional debug information, enforcing memory protection
+  for program headers from an ELF file or any other purpose.
 - `module` - (string) - shorthand alias for `module/path`
 - `module/type` (string, optional, default="file") - one of "file" or "memory". File modules require a path argument
-and simply make the loader preload a file from disk into RAM. Memory modules are used to request general purpose
-contiguous zeroed memory allocations without any backing, and can be used for bootstrapping kernel allocators or any other purpose.
+  and simply make the loader preload a file from disk into RAM. Memory modules are used to request general purpose
+  contiguous zeroed memory allocations without any backing, and can be used for bootstrapping kernel allocators or any other purpose.
 - `module/size` (unsigned/string, optional*, default="auto") - defines the size of the module. Mandatory for "memory" modules.
-Can be used to truncate or extend "file" modules, if this is bigger than the file size, the rest of the memory is zeroed.
+  Can be used to truncate or extend "file" modules, if this is bigger than the file size, the rest of the memory is zeroed.
 - `module/name` - (string, optional, default=\<implementation-defined\>) - name of the module that the kernel receives
 - `module/path` - (string, optional*) - specifies the path for the module to load in a loader-defined format, if applicable
 - `module/load-at` (unsigned/string, optional, default="anywhere") - specifies the load address for the module or "anywhere"
-                  
-Each directive generates a separate `ultra_module_info_attribute`
-        
-### Miscellaneous
-        
-- `identity-map-lower-half` - (bool, optional, default=true) - if set to `true`, identity maps the entire RAM in the lower half.
-More details are provided in the "State After Handoff" section. Only applicable for 64-bit higher half kernels.
-   
-- `null-guard` - (bool, optional, default=false) - if set to `true`, the first physical page is not identity mapped to prevent
-accidental `NULL` accesses. Only applicable for 64-bit kernels.
 
-- `higher-half-exclusive` - (bool, optional, default=false) - if set to `true`, relocates all `address` fields to higher half
-and doesn't provide any identity mappings for lower half. Only applicable for 64-bit higher half kernels. 
+Each directive generates a separate `ultra_module_info_attribute`
+
+### Miscellaneous
+
+- `higher-half-exclusive` - (bool, optional, default=false) - if set to `true`, no identity mappings are provided for lower half.
+  All loader-provided attribute `address` fields are relocated to higher half if present. Only applicable for higher-half kernels.
 
 ---
 
@@ -143,12 +146,22 @@ Page size is defined as 4096 bytes.
 - DS, ES, FS, GS, SS - set to a flat ring 0 data segment
 
 ### i386
-- Paging disabled
+Higher half is defined as `0xC000'0000`  
+The kernel is considered higher half if it wants to be loaded at or above `0xC010'0000`
+
+- Paging enabled
 - EIP - set to the entrypoint as specified by the kernel binary
 - EAX, ECX, EDX, EBX, EBP, ESI, EDI - zeroed
 - ESP - set to a valid stack pointer as determined by the configuration, aligned according to SysV ABI
 - *ESP+8 - `ULTRA_MAGIC`
 - *ESP+4 - `ultra_boot_context*`
+
+| virtual address | physical address | length of the mapping |
+|-----------------|------------------|-----------------------|
+| 0x0000'0000     | 0x0000'0000      | 3 GiB                 |
+| 0xC000'0000     | 0x0000'0000      | 1 GiB                 |
+
+The first mapping is not provided for the `higher-half-exclusive` mode.
 
 ### AMD64
 
@@ -167,20 +180,21 @@ The kernel is considered higher half if it wants to be loaded at or above `0xFFF
 | 0x0000'0000'0000'0000 | 0x0000'0000'0000'0000 | 4 GiB + any entries above |
 | 0xFFFF'8000'0000'0000 | 0x0000'0000'0000'0000 | 4 GiB + any entries above |
 | 0xFFFF'FFFF'8000'0000 | ????????????????????? | ?????????????????????     |
-                                                           
+
 First two mappings are guaranteed to cover the first 4 GiB of physical memory
 as well as any other entries present in the memory map on top of that.
- 
-The first mapping is not provided for `higher-half-exclusive` mode 
-or in case `identity-map-lower-half` is set to `false`.
+
+The first mapping is not provided for the `higher-half-exclusive` mode.
 
 For higher half kernels loaded with `allocate-anywhere` set to `true`
 the last mapping contains the kernel binary mappings with an arbitrary
-physical base picked by the loader. 
+physical base picked by the loader.
 For all other kernels it is a direct mapping of the first 2 GiB of physical ram.
 
-Address pointed to by CR3 is located somewhere within `ULTRA_MEMORY_TYPE_LOADER_RECLAIMABLE`.  
-Whether the memory is mapped using 4K/2M/1G pages is unspecified.             
+---
+
+Address pointed to by CR3 is located somewhere within `ULTRA_MEMORY_TYPE_LOADER_RECLAIMABLE`.
+Whether the memory is mapped using 4K/2M/4M/1G pages is unspecified.
 
 The contents of all other registers are unspecified.
 
@@ -192,19 +206,24 @@ The way the loader provides various information to the kernel is via attributes.
 
 Guarantees about the attribute array & attributes:
 - All attributes are guaranteed to be aligned on an 8 (or more if required) byte
-boundary.
+  boundary.
+- All attributes and `address` fields, as well as any loader-allocated memory
+  that might be accessed by the kernel is guaranteed to be within the mapped
+  address space range. E.g for a 32-bit higher half exclusive kernel all attributes
+  and modules are guaranteed to be allocated under 1 GiB of physical memory so that
+  they can be safely accessed by the kernel.
 - The location of any specific attribute within the array is not fixed
-unless specified otherwise (in the attribute description).
+  unless specified otherwise (in the attribute description).
 - All attributes of the same type are guaranteed to be a contiguous stream.
 - Every attribute type can only appear in the attribute array once unless
-specified otherwise (in the attribute description).
+  specified otherwise (in the attribute description).
 - All attribute types are guaranteed to have `ultra_attribute_header`
-as the first member, this includes both current & future attributes.
+  as the first member, this includes both current & future attributes.
 - It is safe to ignore any unknown attribute types.
 - All currently defined attributes are guaranteed to keep the same layout
-in the future protocol versions, but might have new members added at the end,
-which shouldn't affect any valid software as the header `size` field will be adjusted
-accordingly.
+  in the future protocol versions, but might have new members added at the end,
+  which shouldn't affect any valid software as the header `size` field will be adjusted
+  accordingly.
 
 Every attribute has a distinct type and starts with the following header:
 
@@ -324,7 +343,7 @@ struct ultra_kernel_info_attribute {
 #define ULTRA_PARTITION_TYPE_MBR     2
 #define ULTRA_PARTITION_TYPE_GPT     3
 ```
-- `disk_guid` - GUID of the disk that the kernel was loaded from, only valid for `ULTRA_PARTITION_TYPE_GPT` 
+- `disk_guid` - GUID of the disk that the kernel was loaded from, only valid for `ULTRA_PARTITION_TYPE_GPT`
 - `partiton_guid` - GUID of the partition that the kernel was loaded from, only valid for `ULTRA_PARTITION_TYPE_GPT`
 - `disk_index` - index of the disk the kernel was loaded from
 - `partition_index` - index of the partition the kernel was loaded from, index >= 4 implies EBR partition N - 4 for an MBR disk
@@ -403,7 +422,7 @@ General purpose memory free for use by the kernel.
 
 ### ULTRA_MEMORY_TYPE_RESERVED
 Memory reserved by the firmware.
-               
+
 ### ULTRA_MEMORY_TYPE_RECLAIMABLE
 Memory tagged as reclaimable by the firmware. Usually contains ACPI tables.
 
@@ -438,7 +457,7 @@ The number of memory map entries can be calculated using the following C macro:
 ---
 
 ## ULTRA_ATTRIBUTE_MODULE_INFO
-Every loaded kernel module gets a respective attribute of this type, this means  
+Every loaded kernel module gets a respective attribute of this type, this means
 `ultra_boot_context` must contain as many attributes of this type as there are modules.
 
 This attribute provides information necessary to locate a kernel module in memory
@@ -474,7 +493,7 @@ File-backed module.
 Contiguous zeroed memory module.
 
 - `name` - null-terminated ASCII name of the module, as specified in the configuration file
-or `"__KERNEL__"` for the autogenerated kernel binary module (if enabled)
+  or `"__KERNEL__"` for the autogenerated kernel binary module (if enabled)
 - `address` - address of the loaded module, page aligned
 - `size` - size of the module as specified in `module/size`, the actual size in RAM is this value rounded up to page size
 
@@ -494,7 +513,8 @@ struct ultra_command_line_attribute {
 - `text` - null terminated ASCII command line, as specified in the configuration file
 
 Length of the command line is not artificially limited in any way but must fit in the `header.size` field,
-which is 32 bits wide. Note that `header.size` is not necessarily equal to the length of the command line
+which is 32 bits wide.
+Note that `header.size` is not necessarily equal to the length of the command line
 because of alignment reasons.
 
 ---
@@ -551,7 +571,7 @@ Layout of each pixel (low to high memory address):
 | color | BLUE    | GREEN    | RED       |
 
 `bpp` must be set to 24.
-                
+
 ### ULTRA_FB_FORMAT_BGR888
 Standard BGR format.
 
@@ -562,7 +582,7 @@ Layout of each pixel (low to high memory address):
 | color | RED     | GREEN    | BLUE      |
 
 `bpp` must be set to 24.
-               
+
 ### ULTRA_FB_FORMAT_RGBX8888
 Standard RGBX format padded to 32 bits.
 
@@ -570,7 +590,7 @@ Layout of each pixel (low to high memory address):
 
 | bits  | 0 ... 8 | 8 ... 16 | 16 ... 24 | 24 ... 32 |
 |-------|---------|----------|-----------|-----------|
-| color | UNUSED  | BLUE     | GREEN     | RED       |                          
+| color | UNUSED  | BLUE     | GREEN     | RED       |
 
 `bpp` must be set to 32.
 
@@ -588,10 +608,10 @@ Layout of each pixel (low to high memory address):
 - `address` - address of the allocated framebuffer
 
 ---
- 
+
 # Implementation
 
-All structure definitions and macros can be found in the `ultra_protocol.h` file  
+All structure definitions and macros can be found in the `ultra_protocol.h` file
 compatible with both C and C++.
 
 The current reference implementation of the protocol in C can be found at https://github.com/UltraOS/Hyper

@@ -165,7 +165,7 @@ The first mapping is not provided for the `higher-half-exclusive` mode.
 
 ### AMD64
 
-Higher half is defined as `0xFFFF'8000'0000'0000`  
+Higher half is defined as `0xFF00'0000'0000'0000` or `0xFFFF'8000'0000'0000`, depending on `page-table/levels`  
 The kernel is considered higher half if it wants to be loaded at or above `0xFFFF'FFFF'8000'0000`
 
 - RIP - set to the entrypoint as specified by the kernel binary
@@ -175,11 +175,15 @@ The kernel is considered higher half if it wants to be loaded at or above `0xFFF
 - RSP - set to a valid stack pointer as determined by the configuration, aligned according to SysV ABI
 - CR3 - a valid address of a PML4 with the following mappings:
 
-| virtual address       | physical address      | length of the mapping     |
-|-----------------------|-----------------------|---------------------------|
-| 0x0000'0000'0000'0000 | 0x0000'0000'0000'0000 | 4 GiB + any entries above |
-| 0xFFFF'8000'0000'0000 | 0x0000'0000'0000'0000 | 4 GiB + any entries above |
-| 0xFFFF'FFFF'8000'0000 | ????????????????????? | ?????????????????????     |
+Higher half base address depends on the value of `page-table/levels` with the following conditions:
+- `0xFF00'0000'0000'0000` - 'levels' = 5 with a matching constraint
+- `0xFFFF'8000'0000'0000` - 'levels' = 4 with a matching constraint
+
+| virtual address                                   | physical address      | length of the mapping     |
+|---------------------------------------------------|-----------------------|---------------------------|
+| 0x0000'0000'0000'0000                             | 0x0000'0000'0000'0000 | 4 GiB + any entries above |
+| 0xFFFF'8000'0000'0000 OR<br>0xFF00'0000'0000'0000 | 0x0000'0000'0000'0000 | 4 GiB + any entries above |
+| 0xFFFF'FFFF'8000'0000                             | ????????????????????? | ?????????????????????     |
 
 First two mappings are guaranteed to cover the first 4 GiB of physical memory
 as well as any other entries present in the memory map on top of that.

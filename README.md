@@ -293,7 +293,7 @@ struct platform_info_attribute {
 - `loader_major` - major version of the loader
 - `loader_minor` - minor version of the loader
 - `loader_name`  - null-terminated ASCII string with a human-readable name of the loader
-- `acpi_rsdp_address` - physical address of the RSDP table, 0 if not applicable or not present
+- `acpi_rsdp_address` - physical address of the RSDP structure, 0 if not applicable or not present
 
 ### ULTRA_PLATFORM_INVALID
 Reserved. If encountered, must be considered a fatal error.

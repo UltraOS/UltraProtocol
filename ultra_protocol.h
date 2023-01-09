@@ -45,6 +45,8 @@ struct ultra_guid {
     uint8_t  data4[8];
 };
 
+#define ULTRA_PATH_MAX 256
+
 struct ultra_kernel_info_attribute {
     struct ultra_attribute_header header;
 
@@ -62,7 +64,7 @@ struct ultra_kernel_info_attribute {
     uint32_t disk_index;
     uint32_t partition_index;
 
-    char fs_path[256];
+    char fs_path[ULTRA_PATH_MAX];
 };
 
 #define ULTRA_MEMORY_TYPE_INVALID            0x00000000

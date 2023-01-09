@@ -332,7 +332,7 @@ struct ultra_kernel_info_attribute {
     uint32_t disk_index;
     uint32_t partition_index;
 
-    char fs_path[256];
+    char fs_path[ULTRA_PATH_MAX];
 };
 ```
 
@@ -352,6 +352,8 @@ struct ultra_kernel_info_attribute {
 - `disk_index` - index of the disk the kernel was loaded from
 - `partition_index` - index of the partition the kernel was loaded from, index >= 4 implies EBR partition N - 4 for an MBR disk
 - `fs_path` - null terminated UTF-8 string, absolute POSIX path to the kernel binary on the partition
+
+`ULTRA_PATH_MAX` is defined as `256` including the terminating NULL character.
 
 ### ULTRA_PARTITION_TYPE_INVALID
 Reserved. If encountered, must be considered a fatal error.

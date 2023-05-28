@@ -281,6 +281,9 @@ struct platform_info_attribute {
     char loader_name[32];
 
     uint64_t acpi_rsdp_address;
+    uint64_t higher_half_base;
+    uint8_t page_table_depth;
+    uint8_t reserved[7];
 };
 ```
 - `header` - standard attribute header
@@ -294,6 +297,9 @@ struct platform_info_attribute {
 - `loader_minor` - minor version of the loader
 - `loader_name`  - null-terminated ASCII string with a human-readable name of the loader
 - `acpi_rsdp_address` - physical address of the RSDP structure, 0 if not applicable or not present
+- `higher_half_base` - virtual address of the higher half base
+- `page_table_depth` - currently configured page table depth
+- `reserved` - reserved for future use
 
 ### ULTRA_PLATFORM_INVALID
 Reserved. If encountered, must be considered a fatal error.

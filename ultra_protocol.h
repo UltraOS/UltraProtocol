@@ -1,5 +1,5 @@
-// Copyright (c) 2022 UltraOS
-// SPDX-License-Identifier: BSD-2-Clause
+// Copyright (c) 2022-2023 UltraOS
+// SPDX-License-Identifier: MIT
 
 #pragma once
 

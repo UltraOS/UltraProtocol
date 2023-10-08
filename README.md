@@ -202,6 +202,54 @@ Whether the memory is mapped using 4K/2M/4M/1G pages is unspecified.
 
 The contents of all other registers are unspecified.
 
+### AARCH64
+
+The state of all registers not listed here is unspecified.  
+Whether data/instruction caches are enabled is unspecified.  
+The kernel should not assume that any device memory is actually mapped as such.  
+Normal memory is guaranteed to be accessible.
+
+- MMU enabled
+- Exception level 1 OR 2
+  - If EL2: `FEAT_VHE` is supported and `HCL_EL2.{E2H, TGE}` are set to `{1, 1}`
+- Current EL stack alignment checking is enabled
+- SPSel set to `SP_ELx`      
+- DAIF set to `0b1111`
+- NZCV set to `0b000`
+
+- PC - set to the entrypoint as specified by the kernel binary
+- x0 - `ultra_boot_context*`
+- x1 - `ULTRA_MAGIC`
+- x2..x29 - zeroed
+- SP - set to a valid stack pointer as determined by the configuration, aligned according to the aarch64 ABI
+- TTBR{0,1}_ELx - a valid address of a page table with the following mappings:
+
+Higher half is defined as `0xFFF0'0000'0000'0000` or `0xFFFF'0000'0000'0000`, depending on `page-table/levels`  
+The kernel is considered higher half if it wants to be loaded at or above `0xFFFF'FFFF'8000'0000`
+
+Higher half base address depends on the value of `page-table/levels` with the following conditions:
+- `0xFFF0'0000'0000'0000` - 'levels' = 5 with a matching constraint
+- `0xFFFF'0000'0000'0000` - 'levels' = 4 with a matching constraint
+
+| virtual address                                   | physical address      | length of the mapping     |
+|---------------------------------------------------|-----------------------|---------------------------|
+| 0x0000'0000'0000'0000                             | 0x0000'0000'0000'0000 | 4 GiB + any entries above |
+| 0xFFFF'0000'0000'0000 OR<br>0xFFF0'0000'0000'0000 | 0x0000'0000'0000'0000 | 4 GiB + any entries above |
+| 0xFFFF'FFFF'8000'0000                             | ????????????????????? | ?????????????????????     |
+
+First two mappings are guaranteed to cover the first 4 GiB of physical memory
+as well as any other entries present in the memory map on top of that.
+
+The first mapping is not provided for the `higher-half-exclusive` mode.
+
+For higher half kernels loaded with `allocate-anywhere` set to `true`
+the last mapping contains the kernel binary mappings with an arbitrary
+physical base picked by the loader.
+For all other kernels it is a direct mapping of the first 2 GiB of physical ram.
+
+Address pointed to by TTBR{0/1}_ELx is located somewhere within `ULTRA_MEMORY_TYPE_LOADER_RECLAIMABLE`.  
+The granule size, as well as the OA size of the mapped pages is unspecified and is up to the implementation.
+
 ---
 
 # Attributes

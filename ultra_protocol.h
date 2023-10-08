@@ -34,6 +34,7 @@ struct ultra_platform_info_attribute {
     uint64_t higher_half_base;
     uint8_t page_table_depth;
     uint8_t reserved[7];
+    uint64_t dtb_address;
 };
 
 #define ULTRA_PARTITION_TYPE_INVALID 0

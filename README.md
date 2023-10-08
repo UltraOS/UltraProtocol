@@ -332,6 +332,7 @@ struct platform_info_attribute {
     uint64_t higher_half_base;
     uint8_t page_table_depth;
     uint8_t reserved[7];
+    uint64_t dtb_address;
 };
 ```
 - `header` - standard attribute header
@@ -348,6 +349,7 @@ struct platform_info_attribute {
 - `higher_half_base` - virtual address of the higher half base
 - `page_table_depth` - currently configured page table depth
 - `reserved` - reserved for future use
+- `dtb_address` - physical address of the device tree blob, 0 if not applicable or not present
 
 ### ULTRA_PLATFORM_INVALID
 Reserved. If encountered, must be considered a fatal error.

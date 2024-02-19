@@ -35,6 +35,7 @@ struct ultra_platform_info_attribute {
     uint8_t page_table_depth;
     uint8_t reserved[7];
     uint64_t dtb_address;
+    uint64_t smbios_address;
 };
 
 #define ULTRA_PARTITION_TYPE_INVALID 0

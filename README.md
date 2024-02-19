@@ -333,6 +333,7 @@ struct platform_info_attribute {
     uint8_t page_table_depth;
     uint8_t reserved[7];
     uint64_t dtb_address;
+    uint64_t smbios_address;
 };
 ```
 - `header` - standard attribute header
@@ -350,6 +351,7 @@ struct platform_info_attribute {
 - `page_table_depth` - currently configured page table depth
 - `reserved` - reserved for future use
 - `dtb_address` - physical address of the device tree blob, 0 if not applicable or not present
+- `smbios_address` - physical address of the SMBIOS entry point structure (either 32 or 64 bits as indicated by the signature), 0 if not applicable or not present
 
 ### ULTRA_PLATFORM_INVALID
 Reserved. If encountered, must be considered a fatal error.

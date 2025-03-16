@@ -583,7 +583,7 @@ because of alignment reasons.
 
 ---
 
-## ULTRA_ATTRIBUTE_FRAMEBUFFER
+## ULTRA_ATTRIBUTE_FRAMEBUFFER_INFO
 This attributes provides framebuffer information if one was requested and has the following structure:
 ```c
 struct ultra_framebuffer_attribute {

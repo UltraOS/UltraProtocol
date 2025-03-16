@@ -126,6 +126,8 @@ Each directive generates a separate `ultra_module_info_attribute`
 
 - `higher-half-exclusive` - (bool, optional, default=false) - if set to `true`, no identity mappings are provided for lower half.
   All loader-provided attribute `address` fields are relocated to higher half if present. Only applicable for higher-half kernels.
+- `setup-apm` - (bool, optional, default=false) - if set to `true`, requests the loader to set up a 32-bit protected mode interface
+  for the APM. The kernel is provided with `ultra_apm_attribute` in case of successful installation.
 
 ---
 
@@ -295,6 +297,7 @@ struct ultra_attribute_header {
 #define ULTRA_ATTRIBUTE_MODULE_INFO      4
 #define ULTRA_ATTRIBUTE_COMMAND_LINE     5
 #define ULTRA_ATTRIBUTE_FRAMEBUFFER_INFO 6
+#define ULTRA_ATTRIBUTE_APM_INFO         7
 ```
 
 - `size` - size of the entire attribute including the header. This size is often used for calculating the number of entries
@@ -670,6 +673,50 @@ Layout of each pixel (low to high memory address):
 `bpp` must be set to 32.
 
 - `physical_address` - address of the allocated framebuffer
+
+---
+
+## ULTRA_ATTRIBUTE_APM_INFO
+
+This attributes provides APM information if one was requested (via `setup-apm`) and has the following structure:
+```c
+struct ultra_apm_attribute {
+    struct ultra_attribute_header header;
+    struct ultra_apm_info info;
+};
+```
+
+- `header` - standard attribute header
+- `info` - describes the established APM interface and the general APM info, and has the following structure:
+
+```c
+struct ultra_apm_info {
+    uint16_t version;
+    uint16_t flags;
+
+    uint16_t pm_code_segment;
+    uint16_t pm_code_segment_length;
+    uint32_t pm_offset;
+
+    uint16_t rm_code_segment;
+    uint16_t rm_code_segment_length;
+
+    uint16_t data_segment;
+    uint16_t data_segment_length;
+};
+```
+
+- `version` - the APM version number, as reported by the installation check call
+- `flags` - the APM flags, as reported by the installation check call
+- `pm_code_segment` - the 32-bit code segment
+- `pm_code_segment_length` - the length of the 32-bit code segment
+- `pm_offset` - offset to the entry point into the APM BIOS
+- `rm_code_segment` - the 16-bit code segment
+- `rm_code_segment_length` - the length of the 16-bit code segment
+- `data_segment` - the 32-bit data segment
+- `data_segment_length` - the length of the data segment
+
+For more information, consult the APM BIOS Specification.
 
 ---
 

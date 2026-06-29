@@ -385,11 +385,18 @@ struct ultra_kernel_info_attribute {
 
     uint64_t partition_type;
 
-    // only valid if partition_type == PARTITION_TYPE_GPT
+    // only valid if partition_type == ULTRA_PARTITION_TYPE_GPT
     struct ultra_guid disk_guid;
-    struct ultra_guid partition_guid;
 
-    // always valid
+    union {
+        // only valid if partition_type == ULTRA_PARTITION_TYPE_GPT
+        struct ultra_guid partition_guid;
+        // only valid if partition_type == ULTRA_PARTITION_TYPE_PXE_V4
+        struct ultra_ipv4_addr pxe_v4;
+        // only valid if partition_type == ULTRA_PARTITION_TYPE_PXE_V6
+        struct ultra_ipv6_addr pxe_v6;
+    };
+
     uint32_t disk_index;
     uint32_t partition_index;
 
@@ -407,11 +414,15 @@ struct ultra_kernel_info_attribute {
 #define ULTRA_PARTITION_TYPE_RAW     1
 #define ULTRA_PARTITION_TYPE_MBR     2
 #define ULTRA_PARTITION_TYPE_GPT     3
+#define ULTRA_PARTITION_TYPE_PXE_V4  4
+#define ULTRA_PARTITION_TYPE_PXE_V6  5
 ```
 - `disk_guid` - GUID of the disk that the kernel was loaded from, only valid for `ULTRA_PARTITION_TYPE_GPT`
-- `partiton_guid` - GUID of the partition that the kernel was loaded from, only valid for `ULTRA_PARTITION_TYPE_GPT`
-- `disk_index` - index of the disk the kernel was loaded from
-- `partition_index` - index of the partition the kernel was loaded from, index >= 4 implies EBR partition N - 4 for an MBR disk
+- `partition_guid` - GUID of the partition that the kernel was loaded from, only valid for `ULTRA_PARTITION_TYPE_GPT`
+- `pxe_server` - the IP address of the PXE server the kernel was loaded from, only valid for `ULTRA_PARTITION_TYPE_PXE`
+- `disk_index` - index of the disk the kernel was loaded from, always
+0 for `ULTRA_PARTITION_TYPE_PXE_V{4,6}`
+- `partition_index` - index of the partition the kernel was loaded from, index >= 4 implies EBR partition N - 4 for an MBR disk, always 0 for `ULTRA_PARTITION_TYPE_PXE_V{4,6}`
 - `fs_path` - null terminated UTF-8 string, absolute POSIX path to the kernel binary on the partition
 
 `ULTRA_PATH_MAX` is defined as `256` including the terminating NULL character.
@@ -439,6 +450,23 @@ struct ultra_guid {
 };
 ```
 Note that the structure is only guaranteed to be 8 byte aligned within `ultra_kernel_info_attribute`.
+
+### ULTRA_PARTITION_TYPE_PXE_V4 and ULTRA_PARTITION_TYPE_PXE_V6
+Preboot Execution Environment (network boot) media. The kernel was loaded over
+the network via TFTP, `pxe_v4`/`pxe_v6` contains the IP address of the server it was loaded from.
+
+```c
+struct ultra_ipv4_addr {
+    uint8_t addr[4];
+};
+
+struct ultra_ipv6_addr {
+    uint8_t addr[16];
+};
+```
+
+`type` indicates which member of the union is valid. Note that the structure is
+only guaranteed to be 8 byte aligned within `ultra_kernel_info_attribute`.
 
 ### Any Other Value
 Reserved for future use, must be ignored by the kernel.

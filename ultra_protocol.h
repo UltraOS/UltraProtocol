@@ -43,12 +43,22 @@ struct ultra_platform_info_attribute {
 #define ULTRA_PARTITION_TYPE_RAW     1
 #define ULTRA_PARTITION_TYPE_MBR     2
 #define ULTRA_PARTITION_TYPE_GPT     3
+#define ULTRA_PARTITION_TYPE_PXE_V4  4
+#define ULTRA_PARTITION_TYPE_PXE_V6  5
 
 struct ultra_guid {
     uint32_t data1;
     uint16_t data2;
     uint16_t data3;
     uint8_t  data4[8];
+};
+
+struct ultra_ipv4_addr {
+    uint8_t addr[4];
+};
+
+struct ultra_ipv6_addr {
+    uint8_t addr[16];
 };
 
 #define ULTRA_PATH_MAX 256
@@ -60,11 +70,20 @@ struct ultra_kernel_info_attribute {
     uint64_t virtual_base;
     uint64_t size;
 
+    // one of ULTRA_PARTITION_TYPE_*
     uint64_t partition_type;
 
-    // only valid if partition_type == PARTITION_TYPE_GPT
+    // only valid if partition_type == ULTRA_PARTITION_TYPE_GPT
     struct ultra_guid disk_guid;
-    struct ultra_guid partition_guid;
+
+    union {
+        // only valid if partition_type == ULTRA_PARTITION_TYPE_GPT
+        struct ultra_guid partition_guid;
+        // only valid if partition_type == ULTRA_PARTITION_TYPE_PXE_V4
+        struct ultra_ipv4_addr pxe_v4;
+        // only valid if partition_type == ULTRA_PARTITION_TYPE_PXE_V6
+        struct ultra_ipv6_addr pxe_v6;
+    };
 
     // always valid
     uint32_t disk_index;

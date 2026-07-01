@@ -161,8 +161,13 @@ The kernel is considered higher half if it wants to be loaded at or above `0xC01
 
 | virtual address | physical address | length of the mapping |
 |-----------------|------------------|-----------------------|
-| 0x0000'0000     | 0x0000'0000      | 3 GiB                 |
-| 0xC000'0000     | 0x0000'0000      | 1 GiB                 |
+| 0x0000'0000     | 0x0000'0000      | up to 3 GiB           |
+| 0xC000'0000     | 0x0000'0000      | up to 1 GiB           |
+
+Only usable RAM within these windows is mapped (up to 3 GiB in the identity map
+and 1 GiB in the direct map). Reserved and device (MMIO) memory is intentionally
+left unmapped; the kernel must map such regions itself with the appropriate
+caching type.
 
 The first mapping is not provided for the `higher-half-exclusive` mode.
 
@@ -184,12 +189,14 @@ Higher half base address depends on the value of `page-table/levels` with the fo
 
 | virtual address                                   | physical address      | length of the mapping     |
 |---------------------------------------------------|-----------------------|---------------------------|
-| 0x0000'0000'0000'0000                             | 0x0000'0000'0000'0000 | 4 GiB + any entries above |
-| 0xFFFF'8000'0000'0000 OR<br>0xFF00'0000'0000'0000 | 0x0000'0000'0000'0000 | 4 GiB + any entries above |
+| 0x0000'0000'0000'0000                             | 0x0000'0000'0000'0000 | all usable RAM            |
+| 0xFFFF'8000'0000'0000 OR<br>0xFF00'0000'0000'0000 | 0x0000'0000'0000'0000 | all usable RAM            |
 | 0xFFFF'FFFF'8000'0000                             | ????????????????????? | ?????????????????????     |
 
-First two mappings are guaranteed to cover the first 4 GiB of physical memory
-as well as any other entries present in the memory map on top of that.
+The first two mappings cover all usable RAM regions from the memory map, both
+at their physical address and at the higher-half direct map base. Reserved and
+device (MMIO) memory is intentionally left unmapped; the kernel must map such
+regions itself with the appropriate caching type.
 
 The first mapping is not provided for the `higher-half-exclusive` mode.
 
@@ -236,12 +243,14 @@ Higher half base address depends on the value of `page-table/levels` with the fo
 
 | virtual address                                   | physical address      | length of the mapping     |
 |---------------------------------------------------|-----------------------|---------------------------|
-| 0x0000'0000'0000'0000                             | 0x0000'0000'0000'0000 | 4 GiB + any entries above |
-| 0xFFFF'0000'0000'0000 OR<br>0xFFF0'0000'0000'0000 | 0x0000'0000'0000'0000 | 4 GiB + any entries above |
+| 0x0000'0000'0000'0000                             | 0x0000'0000'0000'0000 | all usable RAM            |
+| 0xFFFF'0000'0000'0000 OR<br>0xFFF0'0000'0000'0000 | 0x0000'0000'0000'0000 | all usable RAM            |
 | 0xFFFF'FFFF'8000'0000                             | ????????????????????? | ?????????????????????     |
 
-First two mappings are guaranteed to cover the first 4 GiB of physical memory
-as well as any other entries present in the memory map on top of that.
+The first two mappings cover all usable RAM regions from the memory map, both
+at their physical address and at the higher-half direct map base. Reserved and
+device (MMIO) memory is intentionally left unmapped; the kernel must map such
+regions itself with the appropriate caching type.
 
 The first mapping is not provided for the `higher-half-exclusive` mode.
 

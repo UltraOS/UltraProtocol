@@ -92,15 +92,21 @@ Defines various options related to the address passed in the arch-specific SP re
 
 Defines options related to the video-mode set by the loader before handover.
 
-- `video-mode` - (string, optional, default="auto") - shorthand. `"auto"` implies native width/height, `null` or `"unset"` are also
-  allowed, `ultra_framebuffer_attribute` is not generated if this is the case.
-- `video-mode/width` - (unsigned, optional, default=\<native\>) - requests a specific framebuffer width
-- `video-mode/height` - (unsigned, optional, default=\<native\>) - requests a specific framebuffer height
-- `video-mode/bpp` (unsigned, optional, default=32) - requests a specific framebuffer bits per pixel value
+If an exact resolution is requested (both `width` and `height`), the loader
+sets that resolution and fails if no such mode exists. Otherwise the loader
+picks an appropriate mode on its own: the display's native resolution if it can
+be determined (e.g. via EDID), otherwise the mode the firmware is already in if
+there is one, otherwise the highest available mode.
+
+- `video-mode` - (string, optional, default="auto") - shorthand. `"auto"` lets the loader pick an appropriate mode as
+  described above, `null` or `"unset"` request no framebuffer at all, in which case `ultra_framebuffer_attribute` is not
+  generated.
+- `video-mode/width` - (unsigned, optional) - requests a specific framebuffer width. If set, `height` must be set too.
+- `video-mode/height` - (unsigned, optional) - requests a specific framebuffer height. If set, `width` must be set too.
+- `video-mode/bpp` (unsigned, optional, default=32) - requests a specific framebuffer bits per pixel value. If unset, the
+  loader prefers 32 but falls back to the best available.
 - `video-mode/format` (string, optional, default="auto") - requests a specific framebuffer format, one of `"auto"`,
-  `"rgb888"`, `"bgr888"`, `"rgbx8888"`, `"xrgb8888"` (any case). This option is not affected by `constraint` and
-  is always matched exactly if specified.
-- `video-mode/constraint` (string, optional, default="at-least") - specifies a constraint for the video mode, one of "at-least", "exactly"
+  `"rgb888"`, `"bgr888"`, `"rgbx8888"`, `"xrgb8888"` (any case). Always matched exactly if specified.
 
 ### Kernel Modules
 

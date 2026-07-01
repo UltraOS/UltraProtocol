@@ -2,9 +2,10 @@
 
 Ultra loader protocol defines a set of services and interfaces used by a bootloader to load a kernel/binary file.
 
-The protocol doesn't require any kind of sections residing inside the kernel binary and fully depends on loader-specific
-configuration file to define all necessary load options and parameters. This allows to dynamically change all the parameters
-without having to recompile the kernel as well as being hybrid ultra and any other protocol compatible at the same time.
+The protocol doesn't require any kind of sections residing inside the kernel binary and fully relies on a loader-specific
+configuration file to define all the necessary load options and parameters. This allows all parameters to be changed
+dynamically without recompiling the kernel, and lets the same binary stay compatible with Ultra and any other protocol at
+the same time.
 
 # Protocol Description
 
@@ -42,9 +43,9 @@ The kernel entrypoint ends up looking something like this in C:
 void kernel_entry(struct ultra_boot_context *ctx, uint32_t magic)
 ```
 
-The way the kernel receives this magic number is platform defined and is discussed in the later sections.
+The way the kernel receives this magic number is platform defined and is discussed in later sections.
 
-In case the kernel detects an invalid magic number the `ultra_boot_context*` must be considered invalid and it's recommended that the kernel aborts boot.
+If the kernel detects an invalid magic number, the `ultra_boot_context*` must be considered invalid, and it's recommended that the kernel aborts boot.
 
 ---
 
@@ -263,7 +264,7 @@ Guarantees about the attribute array & attributes:
   boundary.
 - All attributes and `address` fields, as well as any loader-allocated memory
   that might be accessed by the kernel is guaranteed to be within the mapped
-  address space range. E.g for a 32-bit higher half exclusive kernel all attributes
+  address space range. E.g. for a 32-bit higher-half-exclusive kernel, all attributes
   and modules are guaranteed to be allocated under 1 GiB of physical memory so that
   they can be safely accessed by the kernel.
 - The location of any specific attribute within the array is not fixed
@@ -474,7 +475,7 @@ Reserved for future use, must be ignored by the kernel.
 ---
 
 ## ULTRA_ATTRIBUTE_MEMORY_MAP
-This attributes provides a physical memory map of the entire system.
+This attribute provides a physical memory map of the entire system.
 It has the following format:
 ```c
 struct ultra_memory_map_attribute {
@@ -615,7 +616,7 @@ because of alignment reasons.
 ---
 
 ## ULTRA_ATTRIBUTE_FRAMEBUFFER_INFO
-This attributes provides framebuffer information if one was requested and has the following structure:
+This attribute provides framebuffer information if one was requested and has the following structure:
 ```c
 struct ultra_framebuffer_attribute {
     struct ultra_attribute_header header;
@@ -657,7 +658,7 @@ Framebuffer format types are very similar to `DRM_FORMAT_*` and are defined as f
 Reserved. If encountered, must be considered a fatal error.
 
 ### ULTRA_FB_FORMAT_RGB888
-Standard RBG format.
+Standard RGB format.
 
 Layout of each pixel (low to high memory address):
 
@@ -690,7 +691,7 @@ Layout of each pixel (low to high memory address):
 `bpp` must be set to 32.
 
 ### ULTRA_FB_FORMAT_XRGB8888
-Standard RGBX format padded to 32 bits.
+Standard XRGB format padded to 32 bits.
 
 Layout of each pixel (low to high memory address):
 
@@ -706,7 +707,7 @@ Layout of each pixel (low to high memory address):
 
 ## ULTRA_ATTRIBUTE_APM_INFO
 
-This attributes provides APM information if one was requested (via `setup-apm`) and has the following structure:
+This attribute provides APM information if one was requested (via `setup-apm`) and has the following structure:
 ```c
 struct ultra_apm_attribute {
     struct ultra_attribute_header header;

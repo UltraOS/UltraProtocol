@@ -125,10 +125,21 @@ struct ultra_module_info_attribute {
     char name[64];
     uint64_t address;
     uint64_t size;
+    char description[];
 };
+
+/*
+ * NOTE: The size of the description is impossible to derive from header.size
+ *       due to alignment reason. Use str{n}len() or similar.
+ */
+#define ULTRA_MODULE_HAS_DESCRIPTION(header) ((((header).size) - sizeof(struct ultra_module_info_attribute)) > 0)
 
 struct ultra_command_line_attribute {
     struct ultra_attribute_header header;
+    /*
+     * NOTE: The size of 'text' is impossible to derive from header.size
+     *       due to alignment reason. Use str{n}len() or similar.
+     */
     char text[];
 };
 

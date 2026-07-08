@@ -13,6 +13,7 @@
 #define ULTRA_ATTRIBUTE_COMMAND_LINE     5
 #define ULTRA_ATTRIBUTE_FRAMEBUFFER_INFO 6
 #define ULTRA_ATTRIBUTE_APM_INFO         7
+#define ULTRA_ATTRIBUTE_UEFI_INFO        8
 
 struct ultra_attribute_header {
     uint32_t type;
@@ -182,6 +183,23 @@ struct ultra_apm_attribute {
     struct ultra_attribute_header header;
     struct ultra_apm_info info;
 };
+
+struct ultra_uefi_info_attribute {
+    struct ultra_attribute_header header;
+
+    uint64_t system_table_address;
+
+    uint32_t descriptor_size;
+    uint32_t descriptor_version;
+
+    // Width of the UEFI firmware in bits, either 32 or 64
+    uint32_t firmware_width;
+    uint32_t reserved;
+
+    uint8_t memory_descriptors[];
+};
+
+#define ULTRA_UEFI_INFO_MEM_DESC_COUNT(info) ((((info).header.size) - sizeof(struct ultra_uefi_info_attribute)) / (info).descriptor_size)
 
 struct ultra_boot_context {
     uint8_t protocol_major;

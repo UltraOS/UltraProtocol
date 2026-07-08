@@ -137,6 +137,8 @@ Each directive generates a separate `ultra_module_info_attribute`
   All loader-provided attribute `address` fields are relocated to higher half if present. Only applicable for higher-half kernels.
 - `setup-apm` - (bool, optional, default=false) - if set to `true`, requests the loader to set up a 32-bit protected mode interface
   for the APM. The kernel is provided with `ultra_apm_attribute` in case of successful installation.
+- `pass-uefi-info` - (bool, optional, default=false) - if set to `true` and the loader was booted via UEFI, requests the loader to pass
+  the UEFI system table and firmware memory map to the kernel via `ultra_uefi_info_attribute`. Silently ignored on non-UEFI platforms.
 
 ---
 
@@ -316,6 +318,7 @@ struct ultra_attribute_header {
 #define ULTRA_ATTRIBUTE_COMMAND_LINE     5
 #define ULTRA_ATTRIBUTE_FRAMEBUFFER_INFO 6
 #define ULTRA_ATTRIBUTE_APM_INFO         7
+#define ULTRA_ATTRIBUTE_UEFI_INFO        8
 ```
 
 - `size` - size of the entire attribute including the header. This size is often used for calculating the number of entries
@@ -775,6 +778,59 @@ struct ultra_apm_info {
 - `data_segment_length` - the length of the data segment
 
 For more information, consult the APM BIOS Specification.
+
+---
+
+## ULTRA_ATTRIBUTE_UEFI_INFO
+
+This attribute provides the UEFI system table and firmware memory map to the kernel,
+and is only generated on the UEFI platform when requested via `pass-uefi-info`. It has
+the following structure:
+
+```c
+struct ultra_uefi_info_attribute {
+    struct ultra_attribute_header header;
+
+    uint64_t system_table_address;
+
+    uint32_t descriptor_size;
+    uint32_t descriptor_version;
+
+    uint32_t firmware_width;
+    uint32_t reserved;
+
+    uint8_t memory_descriptors[];
+};
+```
+
+- `header` - standard attribute header
+- `system_table_address` - physical address of the `EFI_SYSTEM_TABLE`
+- `descriptor_size` - size in bytes of a single `EFI_MEMORY_DESCRIPTOR` in `memory_descriptors`,
+  as reported by `GetMemoryMap()`. This may be larger than `sizeof(EFI_MEMORY_DESCRIPTOR)`, so always
+  use this value (never `sizeof`) to stride the array.
+- `descriptor_version` - version of the `EFI_MEMORY_DESCRIPTOR` structure, as reported by `GetMemoryMap()`
+- `firmware_width` - the native width of the UEFI firmware in bits, either `32` or `64`. A kernel loaded
+  at a different width than the firmware (e.g. a 64-bit kernel on 32-bit UEFI) must operate in mixed mode
+  to call runtime services.
+- `reserved` - for use by future versions of the protocol, must be ignored
+- `memory_descriptors` - the raw firmware memory map, a contiguous array of `EFI_MEMORY_DESCRIPTOR`
+  entries exactly as returned by `GetMemoryMap()`, each `descriptor_size` bytes apart
+
+The number of memory descriptors can be calculated using the following C macro:
+
+```c
+#define ULTRA_UEFI_INFO_MEM_DESC_COUNT(info) ((((info).header.size) - sizeof(struct ultra_uefi_info_attribute)) / (info).descriptor_size)
+```
+
+Note that, unlike the other count macros, this one takes the whole attribute (not just its header)
+as it also needs `descriptor_size`.
+
+**Boot services have already been exited by the time the kernel receives control**, so the system
+table may only be used for runtime services (and the configuration tables reachable through it).
+Any boot-services-only field (`BootServices`, the console handles/protocols, etc.) is invalid.
+
+The memory map is the exact one that was passed to `ExitBootServices()`, so it is suitable for a
+subsequent `SetVirtualAddressMap()` call.
 
 ---
 

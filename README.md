@@ -519,7 +519,7 @@ struct ultra_memory_map_entry {
 #define ULTRA_MEMORY_TYPE_INVALID            0x00000000
 #define ULTRA_MEMORY_TYPE_FREE               0x00000001
 #define ULTRA_MEMORY_TYPE_RESERVED           0x00000002
-#define ULTRA_MEMORY_TYPE_RECLAIMABLE        0x00000003
+#define ULTRA_MEMORY_TYPE_ACPI_RECLAIMABLE   0x00000003
 #define ULTRA_MEMORY_TYPE_ACPI_NVS           0x00000004
 #define ULTRA_MEMORY_TYPE_LOADER_RECLAIMABLE 0xFFFF0001
 #define ULTRA_MEMORY_TYPE_MODULE             0xFFFF0002
@@ -536,8 +536,8 @@ General purpose memory free for use by the kernel.
 ### ULTRA_MEMORY_TYPE_RESERVED
 Memory reserved by the firmware.
 
-### ULTRA_MEMORY_TYPE_RECLAIMABLE
-Memory tagged as reclaimable by the firmware. Usually contains ACPI tables.
+### ULTRA_MEMORY_TYPE_ACPI_RECLAIMABLE
+Memory tagged as ACPI reclaimable by the firmware. Usually contains ACPI tables.
 
 ### ULTRA_MEMORY_TYPE_ACPI_NVS
 Same as MEMORY_TYPE_RESERVED. Consult the ACPI specification for more information.

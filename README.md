@@ -225,17 +225,33 @@ The contents of all other registers are unspecified.
 ### AARCH64
 
 The state of all registers not listed here is unspecified.  
-Whether data/instruction caches are enabled is unspecified.  
 The kernel should not assume that any device memory is actually mapped as such.  
 Normal memory is guaranteed to be accessible.
 
 - MMU enabled
+- Data and instruction caches enabled (`SCTLR_ELx.{C, I}` set)
 - Exception level 1 OR 2
-  - If EL2: `FEAT_VHE` is supported and `HCL_EL2.{E2H, TGE}` are set to `{1, 1}`
+  - If EL2: `FEAT_VHE` is supported and `HCR_EL2.{E2H, TGE}` are set to `{1, 1}`
 - Current EL stack alignment checking is enabled
 - SPSel set to `SP_ELx`      
 - DAIF set to `0b1111`
 - NZCV set to `0b000`
+
+All mapped Normal memory (the identity and direct-map windows) is mapped as
+Normal, Inner & Outer Write-Back cacheable, Inner Shareable, using `AttrIndx=0`.
+
+`MAIR_ELx` is set to the following guaranteed layout so that the kernel can map
+device memory before establishing its own translation tables:
+
+| AttrIndx | Memory type                                            |
+|----------|--------------------------------------------------------|
+| 0        | Normal, Inner & Outer Write-Back cacheable (RA/WA)     |
+| 1        | Device-nGnRnE                                          |
+| 2        | Normal, Inner & Outer Non-cacheable                    |
+
+The kernel is responsible for mapping device memory (MMIO, framebuffer, etc.)
+itself, using `AttrIndx=1` or `AttrIndx=2` from the layout above, or by
+reprogramming `MAIR_ELx` and its translation tables entirely.
 
 - PC - set to the entrypoint as specified by the kernel binary
 - x0 - `ultra_boot_context*`
